@@ -1,0 +1,39 @@
+services:
+  meilisearch:
+    image: getmeili/meilisearch:v1.10
+    container_name: patch-index-engine
+    restart: unless-stopped
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_MASTER_KEY: patchIndexDevKey2026
+      MEILI_ENV: development
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meili-data:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    image: node:20-alpine
+    container_name: patch-index-web
+    restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm install --omit=dev && node src/server.js"
+    ports:
+      - "3000:3000"
+    environment:
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_API_KEY: patchIndexDevKey2026
+      HOTWORDS_FILE: /app/data/hotwords.json
+    volumes:
+      - ./:/app
+    depends_on:
+      meilisearch:
+        condition: service_healthy
+
+volumes:
+  meili-data:

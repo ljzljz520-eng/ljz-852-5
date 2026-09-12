@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>软件补丁包索引站</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">🛡️</span>
+    <div>
+      <h1>软件补丁包索引站</h1>
+      <span class="subtitle">Patch Index · 全文检索由 <b>Meilisearch</b> 驱动</span>
+    </div>
+  </div>
+  <nav class="nav">
+    <a href="#/search" data-route="search">补丁检索</a>
+    <a href="#/import" data-route="import">数据导入</a>
+    <a href="#/admin" data-route="admin">热词后台</a>
+  </nav>
+</header>
+
+<!-- ========== 检索页 ========== -->
+<main id="page-search" class="page">
+  <section class="search-hero">
+    <form id="search-form">
+      <input id="q" type="search" placeholder="输入补丁名称、KB 编号或摘要关键词，如：安全更新 / KB504 / 蓝牙…" autocomplete="off">
+      <button type="submit">搜索</button>
+    </form>
+    <div id="hot-suggest" class="hot-suggest"></div>
+  </section>
+
+  <div class="layout">
+    <aside class="filters">
+      <div class="filter-head">
+        <h3>过滤条件</h3>
+        <button id="reset-filters" class="link-btn">重置</button>
+      </div>
+
+      <div class="filter-group">
+        <label>系统版本（多选）</label>
+        <div id="f-osversions" class="checklist"></div>
+      </div>
+
+      <div class="filter-group">
+        <label>补丁类型</label>
+        <div id="f-types" class="checklist"></div>
+      </div>
+
+      <div class="filter-group">
+        <label>发布时间</label>
+        <div class="date-range">
+          <input id="f-date-from" type="date">
+          <span>至</span>
+          <input id="f-date-to" type="date">
+        </div>
+        <div class="quick-dates">
+          <button data-days="30">近30天</button>
+          <button data-days="90">近90天</button>
+          <button data-days="365">近一年</button>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>文件大小</label>
+        <select id="f-size">
+          <option value="">全部</option>
+          <option value="0-104857600">100 MB 以下</option>
+          <option value="104857600-524288000">100 MB – 500 MB</option>
+          <option value="524288000-1073741824">500 MB – 1 GB</option>
+          <option value="1073741824-">1 GB 以上</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>排序</label>
+        <select id="f-sort">
+          <option value="time_desc">发布时间：新 → 旧</option>
+          <option value="time_asc">发布时间：旧 → 新</option>
+          <option value="size_desc">体积：大 → 小</option>
+          <option value="size_asc">体积：小 → 大</option>
+          <option value="name_asc">名称 A → Z</option>
+        </select>
+      </div>
+    </aside>
+
+    <section class="results">
+      <div id="result-meta" class="result-meta"></div>
+      <div id="result-list" class="result-list"></div>
+      <div id="pagination" class="pagination"></div>
+    </section>
+  </div>
+</main>
+
+<!-- ========== 导入页 ========== -->
+<main id="page-import" class="page" hidden>
+  <div class="card narrow">
+    <h2>导入补丁数据</h2>
+    <p class="muted">字段：<code>补丁名称、系统版本、类型、文件数量、大小、发布时间、摘要</code>（可附 KB编号）。大小支持 B/KB/MB/GB 后缀。CSV 首行为表头。</p>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="upload">文件上传</button>
+      <button class="tab" data-tab="paste">粘贴文本</button>
+    </div>
+
+    <div id="tab-upload">
+      <input id="file-input" type="file" accept=".csv,.json">
+      <label class="inline"><input type="radio" name="mode" value="upsert" checked> 追加/更新（upsert）</label>
+      <label class="inline"><input type="radio" name="mode" value="replace"> 全量替换</label>
+      <button id="btn-upload" class="primary">开始导入</button>
+    </div>
+
+    <div id="tab-paste" hidden>
+      <select id="paste-format">
+        <option value="csv">CSV</option>
+        <option value="json">JSON</option>
+      </select>
+      <textarea id="paste-content" rows="10" placeholder="补丁名称,系统版本,类型,文件数量,大小,发布时间,摘要&#10;示例补丁,Windows 11 24H2,安全更新,3,200 MB,2026-09-01,修复内核漏洞…"></textarea>
+      <button id="btn-paste" class="primary">导入粘贴内容</button>
+    </div>
+
+    <div id="import-report"></div>
+    <p class="muted">也可以用命令行：<code>node src/cli-import.js data/sample-patches.csv [--replace]</code></p>
+  </div>
+</main>
+
+<!-- ========== 热词后台 ========== -->
+<main id="page-admin" class="page" hidden>
+  <div class="card narrow">
+    <h2>搜索热词后台</h2>
+    <div id="hw-stats" class="hw-stats"></div>
+    <div class="hw-toolbar">
+      <label class="inline"><input type="checkbox" id="hw-zero"> 包含零结果词</label>
+      <button id="hw-refresh" class="primary">刷新</button>
+      <button id="hw-clear" class="danger">清空热词</button>
+    </div>
+    <table class="hw-table">
+      <thead><tr><th>#</th><th>热词</th><th>搜索次数</th><th>最近命中数</th><th>最近搜索</th><th></th></tr></thead>
+      <tbody id="hw-body"></tbody>
+    </table>
+  </div>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>

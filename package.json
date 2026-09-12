@@ -1,0 +1,18 @@
+{
+  "name": "patch-index-site",
+  "version": "1.0.0",
+  "description": "软件补丁包索引站 - Meilisearch 全文检索 + 多维过滤 + 搜索热词后台",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "engine": "bash scripts/run-engine.sh",
+    "import": "node src/cli-import.js",
+    "import:sample": "node src/cli-import.js data/sample-patches.csv --replace"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "meilisearch": "^0.45.0"
+  }
+}
