@@ -59,10 +59,12 @@ function coerce(row, idx, errors) {
   if (!name) problems.push('缺少补丁名称');
   if (!osVersion) problems.push('缺少系统版本');
   if (!type) problems.push('缺少类型');
+  if (!summary) problems.push('缺少摘要');
   if (!releasedAt || Number.isNaN(Date.parse(releasedAt))) problems.push(`发布时间无效: "${releasedAt}"`);
 
+  // 文件数量必须为非负整数（parseInt 会把 "12abc" 截断成 12，因此先做严格格式校验）
+  if (!/^\d+$/.test(fileCountRaw)) problems.push(`文件数量无效: "${fileCountRaw}"`);
   const fileCount = Number.parseInt(fileCountRaw, 10);
-  if (!Number.isFinite(fileCount) || fileCount < 0) problems.push(`文件数量无效: "${fileCountRaw}"`);
   const sizeBytes = parseSize(typeof sizeRaw === 'string' ? sizeRaw : sizeRaw);
   if (sizeBytes === null || sizeBytes < 0) problems.push(`大小无效: "${sizeRaw}"`);
   if (type && !TYPES.includes(type)) problems.push(`类型不在允许列表: "${type}"（允许：${TYPES.join('/')}）`);

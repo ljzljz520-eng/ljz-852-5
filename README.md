@@ -35,7 +35,7 @@ src/
   hotword-store.js   搜索热词计数与持久化
   server.js          Express 路由（检索 / 导入 / 热词后台 / 健康检查）
 public/              前端页面
-data/sample-patches.csv  示例数据（28 条，覆盖 8 种补丁类型）
+data/sample-patches.csv  示例数据（29 条，覆盖 8 种补丁类型）
 docker-compose.yml  一键编排（搜索引擎 + Web）
 ```
 
